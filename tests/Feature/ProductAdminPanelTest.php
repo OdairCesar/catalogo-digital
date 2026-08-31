@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -200,6 +201,20 @@ test('products can be bulk published and unpublished', function () {
         ->callTableBulkAction('unpublish', $products);
 
     expect($products->fresh()->pluck('status')->all())->toBe([PageStatus::Draft, PageStatus::Draft]);
+});
+
+test('the refresh google shopping feed action clears the cached feed for every company', function () {
+    $companyA = Company::factory()->create();
+    $companyB = Company::factory()->create();
+
+    Cache::put("google-shopping-feed-{$companyA->id}", ['stale'], now()->addHour());
+    Cache::put("google-shopping-feed-{$companyB->id}", ['stale'], now()->addHour());
+
+    Livewire::test(ListProducts::class)
+        ->callAction('refreshGoogleShoppingFeed');
+
+    expect(Cache::has("google-shopping-feed-{$companyA->id}"))->toBeFalse()
+        ->and(Cache::has("google-shopping-feed-{$companyB->id}"))->toBeFalse();
 });
 
 test('the products list can be filtered by company', function () {

@@ -63,3 +63,19 @@ test('the edit company view feed action only shows when the company has an activ
     Livewire::test(EditCompany::class, ['record' => $withoutProducts->getRouteKey()])
         ->assertActionHidden('viewOnSite');
 });
+
+test('the products list view feed action shows when the current company has an active product', function () {
+    $company = Company::factory()->create(['status' => PageStatus::Published]);
+    Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+
+    Livewire::test(ListProducts::class)
+        ->assertActionVisible('viewOnSite')
+        ->assertActionHasUrl('viewOnSite', route('products.feed', $company));
+});
+
+test('the products list view feed action is hidden when the current company has no active product', function () {
+    Company::factory()->create(['status' => PageStatus::Published]);
+
+    Livewire::test(ListProducts::class)
+        ->assertActionHidden('viewOnSite');
+});

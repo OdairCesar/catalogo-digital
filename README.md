@@ -6,8 +6,9 @@ catálogo, conteúdo e leads.
 
 Este projeto nasceu de um boilerplate de agência de tecnologia (OD Tec) com módulos extras de
 serviços/SEO local, portfólio e ferramentas de geração de leads. Esses módulos continuam no
-código, mas ficam desativados via `.env` (`config/modules.php`) nesta implantação, por não fazerem
-sentido para uma marca de moda fitness.
+código, mas ficam desativados por padrão via `.env` (`config/modules.php` — `MODULE_SERVICOS_ENABLED`
+e `MODULE_FERRAMENTAS_ENABLED`), por não fazerem sentido para uma marca de moda fitness. O módulo
+central desta implantação é o de **Produtos** (`MODULE_PRODUTOS_ENABLED`), o catálogo da loja.
 
 ## Stack
 
@@ -18,25 +19,42 @@ sentido para uma marca de moda fitness.
 - **Qualidade:** Larastan (PHPStan), Laravel Pint
 - **IA:** abstração própria (`app/Services/Ai`) sobre `openai-php/laravel` e `google-gemini-php/laravel`,
   escolhida via config (`AI_TEXT_PROVIDER` / `AI_IMAGE_PROVIDER`) — usada para geração de posts de
-  blog, conteúdo de clusters de serviço, imagens de capa e relatórios do consultor de IA
+  blog, conteúdo de clusters de serviço, imagens de capa, relatórios das ferramentas de IA e
+  sugestão de mapeamento na importação de produtos
 - **Mídia:** Cloudinary (via `codebar-ag/laravel-flysystem-cloudinary`) como disco de arquivos
 - **Filas:** Laravel Queue (driver `database`)
 
 ## Funcionalidades principais
 
-- **Páginas públicas** (`routes/web.php`): home, sobre, serviços, cidades, estados, portfólio, blog,
-  FAQ, contato, consultor de IA, `sitemap.xml` e `robots.txt`.
+- **Páginas públicas** (`routes/web.php`): home, sobre, produtos, serviços, cidades, estados,
+  portfólio, blog, FAQ, contato, ferramentas, `sitemap.xml` e `robots.txt`. Módulos (`servicos`,
+  `produtos`, `blog`, `ferramentas`) e seções (`portfolio`, `faq_group`, `about`) desativados
+  retornam 404 via os middlewares `module:` e `section:` (`App\Http\Middleware\EnsureModuleEnabled`
+  / `EnsureSectionTypeEnabled`).
+- **Catálogo de produtos** (`app/Models/Product.php`, `ProductCategory`, `ProductAttribute`,
+  `ProductInventory`, `Store`, `Company`): catálogo multi-loja de uma `Company` (a própria marca,
+  ver `Company::current()`), com preço/estoque base no `Product` e overrides por `Store` via
+  `ProductInventory`. Inclui feed do Google Shopping por empresa
+  (`/produtos/feed/{company}.xml`, `App\Http\Controllers\Products\ProductFeedController`) e
+  **importação de planilha assistida por IA** no painel admin: upload → `App\Jobs\MapProductImportColumns`
+  sugere o mapeamento de colunas via IA/RAG (`CatalogContextRetriever`) → revisão humana
+  (`ReviewProductImport`) → `App\Jobs\ExecuteProductImport` grava no catálogo.
 - **SEO programático:** rotas curinga `{service}-em-{city}` que resolvem `LandingPage`s e
   `ServiceClusterLandingPage`s sincronizadas automaticamente a partir de `Service`/`ServiceCluster`/
   `City` (`app/Actions/Landing`, `app/Actions/ServiceCluster`).
 - **Blog e clusters de serviço com geração via IA:** jobs `App\Jobs\GenerateAiBlogPost` e
   `App\Jobs\GenerateServiceClusterContent` (fila `database`) geram texto e imagem de capa via IA
   (`app/Services/Blog`).
-- **Consultor de IA:** chat (`App\Livewire\ConsultationChat`) que coleta dados do lead e dispara
-  `App\Jobs\GenerateConsultationReport`, gerando um relatório com IA e notificando por e-mail.
+- **Ferramentas com IA:** módulo genérico (`config/tools.php`, `App\Services\Tools\ToolRegistry`)
+  que hoje define 5 ferramentas de chat com lead capture (entre elas o antigo "consultor de IA",
+  agora só mais uma entrada). Chat via `App\Livewire\ToolChat`, submissões em `ToolSubmission`
+  (`tool_slug`), relatório gerado por `App\Jobs\GenerateToolReport` e resultado disponível em PDF
+  assinado (`App\Http\Controllers\Tools\ToolSubmissionPdfController`).
 - **Captura de leads:** formulário de contato (`/contato`) com throttle, listado no painel admin.
-- **Painel admin (Filament):** CRUD de Serviços, Clusters de Serviço, Cidades, Estados, Landing
-  Pages, Portfólio, Posts, Categorias, Leads e Consultorias em `app/Filament/Resources`.
+- **Painel admin (Filament):** CRUD de Produtos, Categorias/Atributos/Estoque de Produto, Lojas,
+  Empresas, Serviços, Clusters de Serviço, Cidades, Estados, Landing Pages, Portfólio, Posts,
+  Categorias (blog), Leads, Submissões de Ferramentas, FAQ, Depoimentos, Blocos de Página e Posts
+  do Instagram em `app/Filament/Resources`.
 
 ## Setup local
 
@@ -77,8 +95,9 @@ php artisan test --compact
 ## Deploy no Railway
 
 O serviço web padrão do Railway só atende HTTP — nada processa a fila `database` usada pelos jobs
-de geração via IA (`GenerateAiBlogPost`, `GenerateServiceClusterContent`, `GenerateConsultationReport`)
-e por `RegenerateLandingPages`. É preciso um **segundo serviço** ("worker"), apontando para o mesmo
+de geração via IA (`GenerateAiBlogPost`, `GenerateServiceClusterContent`, `GenerateToolReport`),
+importação de produtos (`MapProductImportColumns`, `ExecuteProductImport`) e por
+`RegenerateLandingPages`. É preciso um **segundo serviço** ("worker"), apontando para o mesmo
 repositório/branch:
 
 1. Crie um novo serviço no mesmo projeto Railway, mesmo repo/branch do serviço web.

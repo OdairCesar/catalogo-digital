@@ -36,7 +36,17 @@ final class GoogleShoppingFeedBuilder
      */
     public function itemsForCompany(Company $company): array
     {
-        return Cache::remember("google-shopping-feed-{$company->id}", now()->addHour(), fn (): array => $this->buildItemsForCompany($company));
+        return Cache::remember($this->cacheKey($company), now()->addHour(), fn (): array => $this->buildItemsForCompany($company));
+    }
+
+    public function forgetCache(Company $company): void
+    {
+        Cache::forget($this->cacheKey($company));
+    }
+
+    private function cacheKey(Company $company): string
+    {
+        return "google-shopping-feed-{$company->id}";
     }
 
     /**
