@@ -1,0 +1,200 @@
+@import 'swiper/css' layer(base);
+@import 'swiper/css/grid' layer(base);
+@import 'swiper/css/pagination' layer(base);
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Work Sans', sans-serif;
+    --font-display: 'Poppins', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* Paleta da marca Fit By Cae — ver desing-and-context/fit_by_cae_contexto_marca.md */
+    --color-brand-purple: #9647B2;
+    --color-brand-purple-light: #A855C4;
+    --color-brand-purple-dark: #5E2A73;
+    --color-brand-navy: #1C2839;
+    --color-brand-lilac: #E9D6F0;
+    --color-brand-offwhite: #FAFAFC;
+    --color-brand-magenta: #E85D9E;
+}
+
+@layer base {
+    a {
+        color: var(--color-brand-purple);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--color-brand-magenta);
+    }
+
+    ::selection {
+        background: var(--color-brand-purple);
+        color: #fff;
+    }
+}
+
+/* [data-reveal] starts fully visible so content isn't hidden when JS fails to load; only .js (set by an inline script) opts into the fade-in effect. */
+.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+.swiper-pagination-bullet {
+    background: #cbd5e1;
+    opacity: 1;
+    width: 9px;
+    height: 9px;
+}
+
+.swiper-pagination-bullet-active {
+    background: var(--color-brand-purple);
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(-24px) translateX(14px);
+    }
+}
+
+@keyframes gradient-shift {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.animate-float {
+    animation: float 9s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+    animation: float 11s ease-in-out infinite reverse;
+}
+
+.animate-gradient-shift {
+    animation: gradient-shift 4s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-float-reverse,
+    .animate-gradient-shift {
+        animation: none;
+    }
+}
+
+[data-variant],
+[data-size-option],
+[data-color-option] {
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+[data-variant].is-selected,
+[data-size-option].is-selected {
+    background: var(--color-brand-purple);
+    border-color: var(--color-brand-purple);
+    color: #fff;
+}
+
+[data-color-option].is-selected {
+    border-color: var(--color-brand-purple);
+    background: var(--color-brand-lilac);
+}
+
+/* Keeps the cookie banner from covering the product page's sticky "buy on
+   WhatsApp" bar — both are fixed to the bottom of the viewport. */
+body:has([data-product-sticky-bar]) [data-cookie-consent] {
+    bottom: 76px;
+}
+
+.blog-content {
+    color: #1e293b;
+    font-size: 17px;
+    line-height: 1.75;
+}
+
+.blog-content > * + * {
+    margin-top: 1.25em;
+}
+
+.blog-content h2 {
+    margin-top: 1.75em;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.blog-content h3 {
+    margin-top: 1.5em;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.blog-content ul,
+.blog-content ol {
+    padding-left: 1.5em;
+}
+
+.blog-content ul {
+    list-style-type: disc;
+}
+
+.blog-content ol {
+    list-style-type: decimal;
+}
+
+.blog-content li + li {
+    margin-top: 0.5em;
+}
+
+.blog-content strong {
+    font-weight: 700;
+}
+
+.blog-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.blog-content th,
+.blog-content td {
+    border: 1px solid #e2e8f0;
+    padding: 0.6em 0.9em;
+    text-align: left;
+}
+
+.blog-content th {
+    background: #f8fafc;
+    font-weight: 700;
+}

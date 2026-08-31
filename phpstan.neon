@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    parseModelCastsMethod: true
+
+    level: max
+
+    tmpDir: storage/framework/phpstan
+
+    excludePaths:
+        - app/Providers/*Provider.php
