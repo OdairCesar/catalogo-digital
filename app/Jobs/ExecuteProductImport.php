@@ -55,7 +55,7 @@ class ExecuteProductImport implements ShouldQueue
             }
 
             $mapping = ProductImportMapping::fromArray($this->import->mapping);
-            $spreadsheet = $spreadsheetParser->parse($this->import->spreadsheet_path, 'local');
+            $spreadsheet = $spreadsheetParser->parse($this->import->spreadsheet_path);
             $preview = $previewBuilder->build($this->import->company, $spreadsheet, $mapping);
             $result = $writer->write($this->import->company, $preview);
 

@@ -22,7 +22,6 @@ final class ImportProductsForm
                     ->required(),
                 FileUpload::make('spreadsheet')
                     ->label('Planilha (XLSX)')
-                    ->disk('local')
                     ->directory('product-imports')
                     ->visibility('private')
                     ->acceptedFileTypes([

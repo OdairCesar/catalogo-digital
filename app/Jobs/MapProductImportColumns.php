@@ -43,7 +43,7 @@ class MapProductImportColumns implements ShouldQueue
     ): void {
         $this->import->update(['status' => ProductImportStatus::Mapping]);
 
-        $spreadsheet = $spreadsheetParser->parse($this->import->spreadsheet_path, 'local');
+        $spreadsheet = $spreadsheetParser->parse($this->import->spreadsheet_path);
 
         if ($spreadsheet->headers === []) {
             $this->import->update([

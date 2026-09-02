@@ -184,7 +184,7 @@ class ReviewProductImport extends Page
 
     private function spreadsheet(): ParsedSpreadsheet
     {
-        return $this->spreadsheet ??= app(SpreadsheetParser::class)->parse($this->import->spreadsheet_path, 'local');
+        return $this->spreadsheet ??= app(SpreadsheetParser::class)->parse($this->import->spreadsheet_path);
     }
 
     /**
