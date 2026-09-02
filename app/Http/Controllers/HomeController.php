@@ -11,6 +11,7 @@ use App\Models\Section;
 use App\Models\SectionTypeSetting;
 use App\Services\Products\ProductViewModelFactory;
 use App\Services\Seo\StructuredDataService;
+use App\Services\Testimonials\TestimonialPresenter;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -73,15 +74,9 @@ class HomeController extends Controller
      */
     private function testimonials(): array
     {
-        return Section::query()->ofType(SectionType::Testimonial)->active()->ordered()->get()
-            ->map(fn (Section $testimonial): array => [
-                'text' => $testimonial->content,
-                'name' => $testimonial->data['author_name'] ?? null,
-                'detail' => $testimonial->data['author_detail'] ?? null,
-                'initial' => Str::upper(Str::substr($testimonial->data['author_name'] ?? '', 0, 1)),
-                'extra_fields' => $testimonial->extra_fields ?? [],
-            ])
-            ->all();
+        return TestimonialPresenter::present(
+            Section::query()->ofType(SectionType::Testimonial)->active()->ordered()->whereNull('product_id')->get()
+        );
     }
 
     /**

@@ -2,12 +2,16 @@
 
 namespace App\Services\Products;
 
+use App\Enums\SectionType;
 use App\Models\Product;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductVariant;
+use App\Models\Section;
+use App\Models\SectionTypeSetting;
 use App\Services\Seo\BreadcrumbBuilder;
 use App\Services\Seo\SeoMetaBuilder;
 use App\Services\Seo\StructuredDataService;
+use App\Services\Testimonials\TestimonialPresenter;
 use App\ViewModels\ProductViewModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -63,6 +67,12 @@ final readonly class ProductViewModelFactory
 
         $related = array_values($related);
 
+        $testimonials = SectionTypeSetting::isEnabled(SectionType::Testimonial)
+            ? TestimonialPresenter::present(
+                Section::query()->ofType(SectionType::Testimonial)->active()->ordered()->where('product_id', $product->id)->get()
+            )
+            : [];
+
         return new ProductViewModel(
             title: $product->title,
             description: $product->description,
@@ -82,6 +92,7 @@ final readonly class ProductViewModelFactory
             colorOptions: $selector['colors'],
             variantMatrix: $selector['matrix'],
             relatedProducts: $related,
+            testimonials: $testimonials,
             seo: $this->seoMetaBuilder->forProduct($product),
             breadcrumbs: $breadcrumbs,
             jsonLd: $jsonLd,

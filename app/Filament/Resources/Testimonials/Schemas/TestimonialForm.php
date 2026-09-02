@@ -27,6 +27,15 @@ class TestimonialForm
                 TextInput::make('data.author_detail')
                     ->label('Detalhe')
                     ->placeholder('Ex: veste 44'),
+                Select::make('product_id')
+                    ->label('Produto')
+                    ->relationship('product', 'title')
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->placeholder('Nenhum — avaliação da loja')
+                    ->columnSpanFull()
+                    ->helperText('Se preenchido, o depoimento aparece na página desse produto. Se vazio (\"Nenhum\"), aparece na home como avaliação da loja.'),
                 Select::make('status')
                     ->label('Status')
                     ->options(PageStatus::class)

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\PageStatus;
 use App\Enums\SectionType;
+use App\Models\Product;
 use App\Models\Section;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -41,6 +42,11 @@ class SectionFactory extends Factory
     public function draft(): self
     {
         return $this->state(['status' => PageStatus::Draft]);
+    }
+
+    public function forProduct(Product $product): self
+    {
+        return $this->state(['product_id' => $product->id]);
     }
 
     public function published(): self

@@ -1,11 +1,13 @@
 <?php
 
 use App\Enums\PageStatus;
+use App\Enums\SectionType;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductVariant;
+use App\Models\Section;
 use App\Models\SectionTypeSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -138,6 +140,42 @@ test('product show page renders color swatches even when variants have no size a
         ->assertSee('background:#901CA3', false)
         ->assertSee('background:#000000', false)
         ->assertDontSee('Tamanho');
+});
+
+test('product show page displays testimonials linked to that product', function () {
+    $company = Company::factory()->create(['status' => PageStatus::Published]);
+    $product = Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+    $otherProduct = Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+
+    Section::factory()->type(SectionType::Testimonial)->forProduct($product)->create([
+        'content' => 'Amei essa peça.',
+        'data' => ['author_name' => 'Cliente Feliz'],
+    ]);
+
+    Section::factory()->type(SectionType::Testimonial)->forProduct($otherProduct)->create([
+        'content' => 'Depoimento de outro produto.',
+    ]);
+
+    Section::factory()->type(SectionType::Testimonial)->create([
+        'content' => 'Depoimento da loja.',
+    ]);
+
+    $this->get(route('products.show', $product))
+        ->assertOk()
+        ->assertSee('Amei essa peça.')
+        ->assertDontSee('Depoimento de outro produto.')
+        ->assertDontSee('Depoimento da loja.');
+});
+
+test('product show page does not render the testimonials section when the product has none', function () {
+    $company = Company::factory()->create(['status' => PageStatus::Published]);
+    $product = Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+
+    Section::factory()->type(SectionType::Testimonial)->create(['content' => 'Depoimento da loja.']);
+
+    $this->get(route('products.show', $product))
+        ->assertOk()
+        ->assertDontSee('Depoimento da loja.');
 });
 
 test('the product show page does not issue extra queries per variant', function () {

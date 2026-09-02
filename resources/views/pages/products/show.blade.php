@@ -171,13 +171,15 @@
                     </div>
                 </div>
 
-                <div class="mx-[clamp(16px,3vw,24px)] mt-[22px] rounded-[22px] bg-brand-lilac p-[18px]">
-                    <p class="text-[clamp(14.5px,1.4vw,16px)] leading-[1.6] text-balance text-brand-purple-dark">"Primeira legging que não enrolou no cós o dia inteiro. Chorei no provador, de bom."</p>
-                    <div class="mt-[14px] flex items-center gap-[10px]">
-                        <div class="font-display flex h-[56px] w-[56px] flex-none items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white">J</div>
-                        <div class="font-display text-[12.5px] font-semibold text-brand-purple-dark">Juliana, 31</div>
+                @if (! empty($vm->testimonials))
+                    <div class="mx-[clamp(16px,3vw,24px)] mt-[22px] rounded-[22px] bg-brand-lilac p-[18px]">
+                        <p class="text-[clamp(14.5px,1.4vw,16px)] leading-[1.6] text-balance text-brand-purple-dark">"{{ $vm->testimonials[0]['text'] }}"</p>
+                        <div class="mt-[14px] flex items-center gap-[10px]">
+                            <div class="font-display flex h-[56px] w-[56px] flex-none items-center justify-center rounded-full bg-brand-purple text-sm font-bold text-white">{{ $vm->testimonials[0]['initial'] }}</div>
+                            <div class="font-display text-[12.5px] font-semibold text-brand-purple-dark">{{ $vm->testimonials[0]['name'] }}</div>
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 

@@ -11,6 +11,7 @@ final readonly class ProductViewModel
      * @param  list<array{label: string, hex: string, imageUrl: ?string}>  $colorOptions
      * @param  array<string, array{priceLabel: ?string, stockLabel: string, imageUrl: ?string, inStock: bool}>  $variantMatrix
      * @param  list<array{title: string, url: string, coverImageUrl: ?string, priceLabel: ?string}>  $relatedProducts
+     * @param  list<array{text: ?string, initial: string, name: ?string, detail: ?string, extra_fields: array<int, array{label: string, value: string}>}>  $testimonials
      * @param  array<int, array{label: string, url?: string}>  $breadcrumbs
      * @param  array<int, array<string, mixed>>  $jsonLd
      */
@@ -33,6 +34,7 @@ final readonly class ProductViewModel
         public array $colorOptions,
         public array $variantMatrix,
         public array $relatedProducts,
+        public array $testimonials,
         public SeoMeta $seo,
         public array $breadcrumbs = [],
         public array $jsonLd = [],

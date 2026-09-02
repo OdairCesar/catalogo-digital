@@ -10,6 +10,7 @@ use App\Filament\Resources\PageBlocks\Pages\EditPageBlock;
 use App\Filament\Resources\PageBlocks\Pages\ListPageBlocks;
 use App\Filament\Resources\Testimonials\Pages\CreateTestimonial;
 use App\Filament\Resources\Testimonials\Pages\ListTestimonials;
+use App\Models\Product;
 use App\Models\Section;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -45,6 +46,30 @@ test('creating a testimonial through the resource form sets its type automatical
     expect($testimonial)->not->toBeNull()
         ->and($testimonial->type)->toBe(SectionType::Testimonial)
         ->and($testimonial->data['author_name'])->toBe('Fulana');
+});
+
+test('the testimonial form renders a none option for the product select', function () {
+    Livewire::test(CreateTestimonial::class)
+        ->assertOk()
+        ->assertSee('Nenhum — avaliação da loja');
+});
+
+test('creating a testimonial linked to a product sets its product_id', function () {
+    $product = Product::factory()->create();
+
+    Livewire::test(CreateTestimonial::class)
+        ->fillForm([
+            'content' => 'Amei essa peça.',
+            'data.author_name' => 'Fulana',
+            'product_id' => $product->id,
+            'status' => 'published',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $testimonial = Section::query()->ofType(SectionType::Testimonial)->firstOrFail();
+
+    expect($testimonial->product_id)->toBe($product->id);
 });
 
 test('creating a faq group with nested questions works end to end', function () {

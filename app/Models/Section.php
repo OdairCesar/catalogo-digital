@@ -26,6 +26,7 @@ class Section extends Model
     protected $fillable = [
         'type',
         'service_id',
+        'product_id',
         'title',
         'slug',
         'excerpt',
@@ -76,6 +77,14 @@ class Section extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * @return BelongsTo<Product, $this>
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 
     /**

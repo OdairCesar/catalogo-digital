@@ -25,6 +25,10 @@ class TestimonialsTable
                     ->label('Depoimento')
                     ->limit(60)
                     ->searchable(),
+                TextColumn::make('product.title')
+                    ->label('Produto')
+                    ->placeholder('Loja (home)')
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge(),

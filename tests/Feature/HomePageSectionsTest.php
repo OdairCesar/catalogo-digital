@@ -2,6 +2,7 @@
 
 use App\Enums\SectionType;
 use App\Models\Company;
+use App\Models\Product;
 use App\Models\Section;
 use Illuminate\Support\Facades\Storage;
 
@@ -64,6 +65,25 @@ test('home page lists active testimonials in order and hides drafts', function (
 
     $content = $response->getContent();
     expect(strpos($content, 'Primeiro depoimento.'))->toBeLessThan(strpos($content, 'Segundo depoimento.'));
+});
+
+test('home page does not list testimonials that belong to a product', function () {
+    $product = Product::factory()->create();
+
+    Section::factory()->type(SectionType::Testimonial)->forProduct($product)->create([
+        'content' => 'Depoimento do produto.',
+        'data' => ['author_name' => 'Pessoa Produto'],
+    ]);
+
+    Section::factory()->type(SectionType::Testimonial)->create([
+        'content' => 'Depoimento da loja.',
+        'data' => ['author_name' => 'Pessoa Loja'],
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Depoimento da loja.')
+        ->assertDontSee('Depoimento do produto.');
 });
 
 test('home page renders extra fields added to the hero and to a testimonial', function () {
