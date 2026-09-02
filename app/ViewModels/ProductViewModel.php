@@ -8,7 +8,7 @@ final readonly class ProductViewModel
      * @param  array<int, string>  $galleryImageUrls
      * @param  array<int, array{label: string, priceLabel: ?string, stockLabel: string, imageUrl: ?string, inStock: bool}>  $variants
      * @param  list<array{label: string}>  $sizeOptions
-     * @param  list<array{label: string, hex: string}>  $colorOptions
+     * @param  list<array{label: string, hex: string, imageUrl: ?string}>  $colorOptions
      * @param  array<string, array{priceLabel: ?string, stockLabel: string, imageUrl: ?string, inStock: bool}>  $variantMatrix
      * @param  list<array{title: string, url: string, coverImageUrl: ?string, priceLabel: ?string}>  $relatedProducts
      * @param  array<int, array{label: string, url?: string}>  $breadcrumbs

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\ProductAttributes\Schemas;
 
+use App\Filament\Support\Forms\CloudinaryImageUpload;
 use Closure;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -43,7 +45,12 @@ class ProductAttributeForm
                             ->label('Valor')
                             ->helperText('Ex: Azul, Vermelho, P, M, G.')
                             ->required(),
+                        ColorPicker::make('hex')
+                            ->label('Cor'),
+                        CloudinaryImageUpload::make('image')
+                            ->label('Imagem'),
                     ])
+                    ->columns(3)
                     ->addActionLabel('Adicionar valor')
                     ->defaultItems(1)
                     ->collapsible()

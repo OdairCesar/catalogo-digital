@@ -6,6 +6,7 @@ use App\Enums\PageStatus;
 use App\Enums\ProductAgeGroup;
 use App\Enums\ProductCondition;
 use App\Enums\ProductGender;
+use Closure;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -123,14 +124,37 @@ class Product extends Model
     {
         $price = $this->effectiveValue('price', $store, $this->base_price);
 
-        return is_numeric($price) ? (float) $price : null;
+        if (! is_numeric($price)) {
+            return $this->lowestVariantPrice(fn (ProductVariant $variant): ?float => $variant->effectivePrice($store));
+        }
+
+        return (float) $price;
     }
 
     public function effectiveSalePrice(?Store $store = null): ?float
     {
         $price = $this->effectiveValue('sale_price', $store, $this->base_sale_price);
 
-        return is_numeric($price) ? (float) $price : null;
+        if (! is_numeric($price)) {
+            return $this->lowestVariantPrice(fn (ProductVariant $variant): ?float => $variant->effectiveSalePrice($store));
+        }
+
+        return (float) $price;
+    }
+
+    /**
+     * Falls back to the cheapest active variant when the product itself has
+     * no price of its own (e.g. a product sold only through variants).
+     *
+     * @param  Closure(ProductVariant): ?float  $variantPrice
+     */
+    private function lowestVariantPrice(Closure $variantPrice): ?float
+    {
+        return $this->variants
+            ->where('is_active', true)
+            ->map($variantPrice)
+            ->filter(fn (?float $price): bool => $price !== null)
+            ->min();
     }
 
     public function effectiveStock(?Store $store = null): ?int

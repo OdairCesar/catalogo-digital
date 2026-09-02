@@ -8,6 +8,7 @@ use App\Models\ProductAttributeValue;
 use App\Models\ProductVariant;
 use App\Models\SectionTypeSetting;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 test('product show page resolves for a published product with a published company', function () {
     $company = Company::factory()->create(['status' => PageStatus::Published]);
@@ -88,6 +89,55 @@ test('product show page lists its active variants', function () {
     $this->get(route('products.show', $product))
         ->assertOk()
         ->assertSee('Azul');
+});
+
+test('product show page renders the color swatch using the attribute value\'s own hex and image', function () {
+    $company = Company::factory()->create(['status' => PageStatus::Published]);
+    $product = Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+
+    $color = ProductAttribute::factory()->create(['name' => 'Cor']);
+    $withHex = ProductAttributeValue::factory()->create(['product_attribute_id' => $color->id, 'value' => 'Roxo', 'hex' => '#9647B2']);
+    $withImage = ProductAttributeValue::factory()->create(['product_attribute_id' => $color->id, 'value' => 'Estampado', 'hex' => null, 'image' => 'product-attribute-values/estampado.jpg']);
+    $withoutHex = ProductAttributeValue::factory()->create(['product_attribute_id' => $color->id, 'value' => 'Outra', 'hex' => null]);
+
+    $size = ProductAttribute::factory()->create(['name' => 'Tamanho']);
+    $medium = ProductAttributeValue::factory()->create(['product_attribute_id' => $size->id, 'value' => 'M']);
+
+    foreach ([$withHex, $withImage, $withoutHex] as $colorValue) {
+        $variant = ProductVariant::factory()->create(['product_id' => $product->id, 'is_active' => true]);
+        $variant->attributeValues()->attach([$colorValue->id, $medium->id]);
+    }
+
+    $response = $this->get(route('products.show', $product))->assertOk();
+
+    // Blade's {{ }} escapes the quotes around the url() value into &#039;,
+    // which browsers still resolve correctly inside a style attribute.
+    $imageUrl = Storage::disk('cloudinary')->url('product-attribute-values/estampado.jpg');
+
+    $response->assertSee('background:#9647B2', false);
+    $response->assertSee("background:url(&#039;{$imageUrl}&#039;) center/cover", false);
+    $response->assertSee('background:#C9C9C9', false);
+});
+
+test('product show page renders color swatches even when variants have no size attribute', function () {
+    $company = Company::factory()->create(['status' => PageStatus::Published]);
+    $product = Product::factory()->create(['company_id' => $company->id, 'status' => PageStatus::Published]);
+
+    $color = ProductAttribute::factory()->create(['name' => 'Cor']);
+    $purple = ProductAttributeValue::factory()->create(['product_attribute_id' => $color->id, 'value' => 'Roxo', 'hex' => '#901CA3']);
+    $black = ProductAttributeValue::factory()->create(['product_attribute_id' => $color->id, 'value' => 'Preto', 'hex' => '#000000']);
+
+    foreach ([$purple, $black] as $colorValue) {
+        $variant = ProductVariant::factory()->create(['product_id' => $product->id, 'is_active' => true]);
+        $variant->attributeValues()->attach($colorValue->id);
+    }
+
+    $this->get(route('products.show', $product))
+        ->assertOk()
+        ->assertSee('data-color-option', false)
+        ->assertSee('background:#901CA3', false)
+        ->assertSee('background:#000000', false)
+        ->assertDontSee('Tamanho');
 });
 
 test('the product show page does not issue extra queries per variant', function () {

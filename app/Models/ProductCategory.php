@@ -6,6 +6,7 @@ use Database\Factories\ProductCategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCategory extends Model
 {
@@ -18,6 +19,7 @@ class ProductCategory extends Model
         'slug',
         'google_product_category',
         'description',
+        'image',
     ];
 
     /**
@@ -31,5 +33,10 @@ class ProductCategory extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function imageUrl(): ?string
+    {
+        return $this->image !== null ? Storage::disk('cloudinary')->url($this->image) : null;
     }
 }

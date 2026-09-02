@@ -5,6 +5,7 @@
 
     $images = collect([$vm->coverImageUrl, ...$vm->galleryImageUrls])->filter()->unique()->values();
     $hasTwoAxis = ! empty($vm->sizeOptions) && ! empty($vm->colorOptions);
+    $hasColorOnly = empty($vm->sizeOptions) && ! empty($vm->colorOptions);
 @endphp
 
 <x-layout.app :title="$vm->seo->title" :description="$vm->seo->description" :canonical="$vm->seo->canonical" :robots="$vm->seo->robots" :og-image="$vm->coverImageUrl" og-type="product" :og-product="[
@@ -20,7 +21,7 @@
     <article
         data-wa-base="{{ $waBase }}"
         data-product-title="{{ $vm->title }}"
-        @if ($hasTwoAxis)
+        @if ($hasTwoAxis || $hasColorOnly)
             data-product-two-axis
             data-matrix="{{ json_encode($vm->variantMatrix) }}"
         @elseif (! empty($vm->variants))
@@ -81,28 +82,33 @@
                     @endif
                 </div>
 
-                @if ($hasTwoAxis)
-                    <div class="px-[clamp(18px,3vw,24px)] pt-[22px]">
-                        <div class="flex items-baseline justify-between">
-                            <div class="font-display text-[clamp(14px,1.4vw,15px)] font-semibold text-brand-navy">Tamanho</div>
-                            @if ($waBase)
-                                <a href="{{ $waBase }}?text={{ rawurlencode('Oi Cae! Quais as medidas reais das peças?') }}" target="_blank" rel="noopener" class="text-[12.5px] font-semibold">medidas reais &rarr;</a>
-                            @endif
+                @if ($hasTwoAxis || $hasColorOnly)
+                    @if ($hasTwoAxis)
+                        <div class="px-[clamp(18px,3vw,24px)] pt-[22px]">
+                            <div class="flex items-baseline justify-between">
+                                <div class="font-display text-[clamp(14px,1.4vw,15px)] font-semibold text-brand-navy">Tamanho</div>
+                                @if ($waBase)
+                                    <a href="{{ $waBase }}?text={{ rawurlencode('Oi Cae! Quais as medidas reais das peças?') }}" target="_blank" rel="noopener" class="text-[12.5px] font-semibold">medidas reais &rarr;</a>
+                                @endif
+                            </div>
+                            <div class="mt-[11px] flex flex-wrap gap-[8px]">
+                                @foreach ($vm->sizeOptions as $index => $size)
+                                    <button type="button" data-size-option data-label="{{ $size['label'] }}" class="{{ $index === 0 ? 'is-selected' : '' }} font-display min-w-[52px] rounded-[13px] border-[1.5px] border-slate-800/15 px-[8px] py-[12px] text-[13.5px] font-semibold text-brand-navy">{{ $size['label'] }}</button>
+                                @endforeach
+                            </div>
+                            <div class="mt-[10px] text-[12.5px] text-slate-500">Na dúvida entre dois, pega o maior 💜</div>
                         </div>
-                        <div class="mt-[11px] flex flex-wrap gap-[8px]">
-                            @foreach ($vm->sizeOptions as $index => $size)
-                                <button type="button" data-size-option data-label="{{ $size['label'] }}" class="{{ $index === 0 ? 'is-selected' : '' }} font-display min-w-[52px] rounded-[13px] border-[1.5px] border-slate-800/15 px-[8px] py-[12px] text-[13.5px] font-semibold text-brand-navy">{{ $size['label'] }}</button>
-                            @endforeach
-                        </div>
-                        <div class="mt-[10px] text-[12.5px] text-slate-500">Na dúvida entre dois, pega o maior 💜</div>
-                    </div>
+                    @endif
 
-                    <div class="px-[clamp(18px,3vw,24px)] pt-[20px]">
+                    <div class="px-[clamp(18px,3vw,24px)] {{ $hasTwoAxis ? 'pt-[20px]' : 'pt-[22px]' }}">
                         <div class="font-display text-[clamp(14px,1.4vw,15px)] font-semibold text-brand-navy">Cor</div>
                         <div class="mt-[11px] flex flex-wrap gap-[10px]">
                             @foreach ($vm->colorOptions as $index => $color)
                                 <button type="button" data-color-option data-label="{{ $color['label'] }}" class="{{ $index === 0 ? 'is-selected' : '' }} font-display flex items-center gap-[8px] rounded-full border-[1.5px] border-slate-800/15 py-[9px] pr-[14px] pl-[10px] text-[13.5px] font-semibold text-brand-navy">
-                                    <span class="h-[20px] w-[20px] rounded-full shadow-[inset_0_0_0_1px_rgba(28,40,57,0.12)]" style="background:{{ $color['hex'] }}"></span>
+                                    <span
+                                        class="h-[20px] w-[20px] rounded-full bg-cover bg-center shadow-[inset_0_0_0_1px_rgba(28,40,57,0.12)]"
+                                        style="background:{{ $color['imageUrl'] ? "url('{$color['imageUrl']}') center/cover" : $color['hex'] }}"
+                                    ></span>
                                     {{ $color['label'] }}
                                 </button>
                             @endforeach
@@ -206,6 +212,8 @@
             <div class="flex min-w-[78px] flex-col justify-center">
                 @if ($hasTwoAxis)
                     <span data-product-selection-summary class="text-[11px] text-slate-500">{{ $vm->colorOptions[0]['label'] ?? '' }} · {{ $vm->sizeOptions[0]['label'] ?? '' }}</span>
+                @elseif ($hasColorOnly)
+                    <span data-product-selection-summary class="text-[11px] text-slate-500">{{ $vm->colorOptions[0]['label'] ?? '' }}</span>
                 @endif
                 <span data-product-sticky-price class="font-display text-[clamp(17px,1.8vw,20px)] font-bold text-brand-navy">{{ $vm->priceLabel }}</span>
             </div>

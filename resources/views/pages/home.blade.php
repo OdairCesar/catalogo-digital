@@ -80,6 +80,10 @@
                             data-reveal
                             class="swiper-slide group relative h-[clamp(200px,24vw,320px)] w-[300px] overflow-hidden rounded-[clamp(20px,2vw,24px)] bg-gradient-to-br {{ $categoryColors[$index % count($categoryColors)] }}"
                         >
+                            @if ($category->imageUrl())
+                                <img src="{{ $category->imageUrl() }}" alt="" aria-hidden="true" class="absolute inset-0 h-full w-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                            @endif
                             <span class="font-display absolute bottom-[clamp(11px,1.2vw,16px)] left-[clamp(12px,1.3vw,18px)] text-[clamp(16px,1.8vw,21px)] font-bold text-white">{{ $category->name }}</span>
                         </a>
                     @endforeach

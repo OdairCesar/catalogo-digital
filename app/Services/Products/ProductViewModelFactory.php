@@ -15,16 +15,6 @@ use Illuminate\Support\Number;
 
 final readonly class ProductViewModelFactory
 {
-    /** @var array<string, string> */
-    private const COLOR_HEX = [
-        'roxo' => '#9647B2',
-        'preto' => '#1C2839',
-        'cinza-azulado' => '#5B6B82',
-        'lilás' => '#E9D6F0',
-        'lilas' => '#E9D6F0',
-        'branco' => '#FAFAFC',
-    ];
-
     private const COLOR_HEX_DEFAULT = '#C9C9C9';
 
     public function __construct(
@@ -53,7 +43,7 @@ final readonly class ProductViewModelFactory
 
         $price = $product->effectivePrice();
         $stock = $product->effectiveStock();
-        $selector = $this->buildTwoAxisSelector($activeVariants);
+        $selector = $this->buildColorSelector($activeVariants);
 
         $related = Product::query()
             ->active()
@@ -137,20 +127,27 @@ final readonly class ProductViewModelFactory
 
     /**
      * Splits active variants into independent "Tamanho"/"Cor" selectors (as
-     * seen in the Fit By Cae design) when every variant carries exactly one
-     * value for each of those two attributes. Products whose variants use a
-     * different attribute shape simply get an empty selector here — the
-     * caller falls back to the flat variant list in that case.
+     * seen in the Fit By Cae design). When every variant carries a "Cor" but
+     * none carries a "Tamanho", the size axis is simply left empty and the
+     * matrix is keyed by color alone — the color swatches still render on
+     * their own. Products whose variants use a different attribute shape
+     * (e.g. size without color) get empty selectors here — the caller falls
+     * back to the flat variant list in that case.
      *
      * @param  Collection<int, ProductVariant>  $variants
      * @return array{
      *     sizes: list<array{label: string}>,
-     *     colors: list<array{label: string, hex: string}>,
+     *     colors: list<array{label: string, hex: string, imageUrl: ?string}>,
      *     matrix: array<string, array{priceLabel: ?string, stockLabel: string, imageUrl: ?string, inStock: bool}>,
      * }
      */
-    private function buildTwoAxisSelector(Collection $variants): array
+    private function buildColorSelector(Collection $variants): array
     {
+        $hasSizeAxis = $variants->contains(
+            fn (ProductVariant $variant): bool => $variant->attributeValues
+                ->contains(fn (ProductAttributeValue $value): bool => mb_strtolower($value->attribute->name) === 'tamanho')
+        );
+
         $sizes = [];
         $colors = [];
         $matrix = [];
@@ -158,6 +155,7 @@ final readonly class ProductViewModelFactory
         foreach ($variants as $variant) {
             $size = null;
             $color = null;
+            $colorValue = null;
 
             foreach ($variant->attributeValues as $value) {
                 /** @var ProductAttributeValue $value */
@@ -167,17 +165,26 @@ final readonly class ProductViewModelFactory
                     $size = $value->value;
                 } elseif ($attributeName === 'cor') {
                     $color = $value->value;
+                    $colorValue = $value;
                 }
             }
 
-            if ($size === null || $color === null) {
+            if ($color === null || $colorValue === null || ($hasSizeAxis && $size === null)) {
                 continue;
             }
 
-            $sizes[$size] ??= true;
-            $colors[$color] ??= self::COLOR_HEX[mb_strtolower($color)] ?? self::COLOR_HEX_DEFAULT;
+            if ($size !== null) {
+                $sizes[$size] ??= true;
+            }
 
-            $matrix["{$size}|{$color}"] = [
+            $colors[$color] ??= [
+                'hex' => $colorValue->hex ?? self::COLOR_HEX_DEFAULT,
+                'imageUrl' => $colorValue->imageUrl(),
+            ];
+
+            $key = $hasSizeAxis ? "{$size}|{$color}" : $color;
+
+            $matrix[$key] = [
                 'priceLabel' => $this->priceLabel($variant->effectivePrice()),
                 'stockLabel' => $this->stockLabel($variant->effectiveStock()),
                 'imageUrl' => $this->imageUrl($variant->effectiveImage()),
@@ -187,7 +194,11 @@ final readonly class ProductViewModelFactory
 
         return [
             'sizes' => array_map(fn (string $label): array => ['label' => $label], array_keys($sizes)),
-            'colors' => array_map(fn (string $label, string $hex): array => ['label' => $label, 'hex' => $hex], array_keys($colors), array_values($colors)),
+            'colors' => array_map(
+                fn (string $label, array $data): array => ['label' => $label, 'hex' => $data['hex'], 'imageUrl' => $data['imageUrl']],
+                array_keys($colors),
+                array_values($colors),
+            ),
             'matrix' => $matrix,
         ];
     }

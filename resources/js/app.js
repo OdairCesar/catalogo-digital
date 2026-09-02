@@ -137,25 +137,31 @@ function initProductTwoAxisPicker() {
         const colorButtons = Array.from(container.querySelectorAll('[data-color-option]'));
 
         const selectedLabel = (buttons) => buttons.find((button) => button.classList.contains('is-selected'))?.dataset.label;
+        const hasSizeAxis = sizeButtons.length > 0;
 
         const update = () => {
             const size = selectedLabel(sizeButtons);
             const color = selectedLabel(colorButtons);
+            const ready = hasSizeAxis ? Boolean(size && color) : Boolean(color);
 
-            if (size && color) {
+            if (ready) {
                 document.querySelectorAll('[data-product-selection-summary]').forEach((el) => {
-                    el.textContent = `${color} · ${size}`;
+                    el.textContent = hasSizeAxis ? `${color} · ${size}` : color;
                 });
             }
 
-            const variant = size && color ? matrix[`${size}|${color}`] : null;
+            const variant = ready ? matrix[hasSizeAxis ? `${size}|${color}` : color] : null;
 
             if (variant) {
                 updateProductSelection(variant);
             }
 
-            if (size && color) {
-                updateProductWhatsappLink(waBase, `Oi Cae! Quero o ${productTitle} ${color.toLowerCase()}, tamanho ${size}. Ainda tem?`);
+            if (ready) {
+                const message = hasSizeAxis
+                    ? `Oi Cae! Quero o ${productTitle} ${color.toLowerCase()}, tamanho ${size}. Ainda tem?`
+                    : `Oi Cae! Quero o ${productTitle} ${color.toLowerCase()}. Ainda tem?`;
+
+                updateProductWhatsappLink(waBase, message);
             }
         };
 

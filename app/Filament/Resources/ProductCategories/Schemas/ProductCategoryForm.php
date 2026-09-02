@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ProductCategories\Schemas;
 
 use App\Filament\Support\Forms\AutoSlug;
+use App\Filament\Support\Forms\CloudinaryImageUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -27,6 +28,10 @@ class ProductCategoryForm
                     ->helperText('Código ou nome da categoria na taxonomia do Google Merchant Center.'),
                 Textarea::make('description')
                     ->label('Descrição')
+                    ->columnSpanFull(),
+                CloudinaryImageUpload::make('image')
+                    ->label('Imagem')
+                    ->helperText('Exibida na vitrine de categorias do site.')
                     ->columnSpanFull(),
             ]);
     }

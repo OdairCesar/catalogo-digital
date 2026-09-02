@@ -13,6 +13,7 @@ use App\Models\ProductAttributeValue;
 use App\Services\Products\VariantGridGenerator;
 use Closure;
 use Filament\Actions\Action;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -298,6 +299,10 @@ class ProductForm
                                                         TextInput::make('value')
                                                             ->label('Valor')
                                                             ->required(),
+                                                        ColorPicker::make('hex')
+                                                            ->label('Cor'),
+                                                        CloudinaryImageUpload::make('image')
+                                                            ->label('Imagem'),
                                                     ])
                                                     ->columnSpanFull(),
                                                 TextInput::make('sku')

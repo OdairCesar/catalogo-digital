@@ -68,6 +68,37 @@ test('a store override on a variant takes precedence over the variant own price'
     expect($variant->effectivePrice($store))->toBe(90.0);
 });
 
+test('a product without its own price falls back to the cheapest active variant price', function () {
+    $product = Product::factory()->create(['base_price' => null, 'base_sale_price' => null]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 150, 'is_active' => true]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 90, 'is_active' => true]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 10, 'is_active' => false]);
+
+    expect($product->effectivePrice())->toBe(90.0);
+});
+
+test('a product without its own sale price falls back to the cheapest active variant sale price', function () {
+    $product = Product::factory()->create(['base_price' => 100, 'base_sale_price' => null]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 100, 'sale_price' => 85]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 100, 'sale_price' => 70]);
+
+    expect($product->effectiveSalePrice())->toBe(70.0);
+});
+
+test('a product with its own price ignores variant prices entirely', function () {
+    $product = Product::factory()->create(['base_price' => 100]);
+    ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 10]);
+
+    expect($product->effectivePrice())->toBe(100.0);
+});
+
+test('a product without a price and without variants has no effective price', function () {
+    $product = Product::factory()->create(['base_price' => null, 'base_sale_price' => null]);
+
+    expect($product->effectivePrice())->toBeNull()
+        ->and($product->effectiveSalePrice())->toBeNull();
+});
+
 test('a variant without its own image or cubage falls back to the parent product values', function () {
     $product = Product::factory()->create([
         'cover_image' => 'products/main.jpg',
