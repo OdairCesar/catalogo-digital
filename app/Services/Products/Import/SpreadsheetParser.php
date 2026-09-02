@@ -3,6 +3,8 @@
 namespace App\Services\Products\Import;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -14,7 +16,21 @@ final class SpreadsheetParser
 {
     public function parse(string $path, ?string $disk = null): ParsedSpreadsheet
     {
-        $sheets = Excel::toCollection(null, $path, $disk);
+        // Downloaded to a local temp file instead of handing $disk straight to
+        // Excel: the Cloudinary disk's exists() check (which Maatwebsite Excel
+        // calls before reading) always assumes an "image" resource type and
+        // reports raw files like a spreadsheet as missing, even though get()
+        // reads them fine.
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: 'xlsx';
+        $temporaryPath = sys_get_temp_dir().'/'.Str::ulid().'.'.$extension;
+
+        file_put_contents($temporaryPath, Storage::disk($disk)->get($path));
+
+        try {
+            $sheets = Excel::toCollection(null, $temporaryPath);
+        } finally {
+            @unlink($temporaryPath);
+        }
 
         /** @var Collection<int, Collection<array-key, mixed>>|null $sheet */
         $sheet = $sheets->first(fn (Collection $rows): bool => $rows->isNotEmpty());
